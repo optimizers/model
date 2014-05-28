@@ -72,7 +72,7 @@ classdef slackmodelnn < model.nlpmodel
          sz.sLx = length(sLx);
          sz.sUc = length(sUc);
          sz.sLc = length(sLc);
-         indxsl = buildind(sz);
+         indxsl = model.buildind(sz);
 
          % Upper and lower bounds for the variables and slacks.
          %    [  x   s   sUx  sLx  sUc  sLc ]
