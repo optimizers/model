@@ -51,89 +51,21 @@ classdef nlpmodel < handle
       BMIN   =  -1e20;  % Free lower bound limit
    end
    
-   methods
-
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function f = fobj(self, x)
-         self.ncalls_fobj = self.ncalls_fobj + 1;
-         t = tic;
-         f = self.nlp.fobj(x);
-         self.time_fobj = self.time_fobj + toc(t);
-      end
-
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function g = gobj(self, x)
-         self.ncalls_gobj = self.ncalls_gobj + 1;
-         t = tic;
-         g = self.nlp.gobj(x);
-         self.time_gobj = self.time_gobj + toc(t);
-      end
-
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function H = hobj(self, x)
-         self.ncalls_hes = self.ncalls_hes + 1;
-         t = tic;
-         H = self.nlp.hobj(x);
-         self.time_hes = self.time_hes + toc(t);
-      end
+   methods (Access = protected)
+      % These methods must be implemented by the subclass, but are not
+      % directly available outside of the class.
+      f = fobj_local(self, x);
+      g = gobj_local(self, x);
+      H = hobj_local(self, x);
+      c = fcon_local(self, x);
+      J = gcon_local(self, x);
+      H = hcon_local(self, x, y);
+      H = hlag_local(self, x, y);
+      w = hlagprod_local(self, x, y, v);
+      w = hconprod_local(self, x, y, v);
+   end
       
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function c = fcon(self, x)
-         self.ncalls_fcon = self.ncalls_fcon + 1;
-         t = tic;
-         c = self.nlp.fcon(x);
-         self.time_fcon = self.time_fcon + toc(t);
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function J = gcon(self, x)
-         self.ncalls_gcon = self.ncalls_gcon + 1;
-         t = tic;
-         J = self.nlp.gcon(x);
-         self.time_gcon = self.time_gcon + toc(t);
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function Hc = hcon(self, x, y)
-         self.ncalls_hes = self.ncalls_hes + 1;
-         t = tic;
-         Hc = self.nlp.hcon(x, y);
-         self.time_hes = self.time_hes + toc(t);
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function H = hlag(self, x, y)
-         self.ncalls_hes = self.ncalls_hes + 1;
-         t = tic;
-         H = self.nlp.hlag(x, y);
-         self.time_hes = self.time_hes + toc(t);         
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-      function w = hlagprod(self, x, y, v)
-         self.ncalls_hvp = self.ncalls_hvp + 1;
-         t = tic;
-         w = self.nlp.hlagprod(x, y, v);
-         self.time_hvp = self.time_hvp + toc(t);
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-      function w = hconprod(self, x, y, v)
-         self.ncalls_hvp = self.ncalls_hvp + 1;
-         t = tic;
-         w = self.nlp.hconprod(x, y, v);
-         self.time_hvp = self.time_hvp + toc(t);
-      end
+   methods (Sealed = true)
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
@@ -171,28 +103,124 @@ classdef nlpmodel < handle
          o.bL = bL;
          o.bU = bU;
          
+         % By default, all constraints are categorized as nonlinear. The
+         % subclass should override this if it's known which constraints
+         % are linear.
+         o.linear = false(o.m, 1);
+         
+      end
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function f = fobj(self, x)
+         self.ncalls_fobj = self.ncalls_fobj + 1;
+         t = tic;
+         f = self.fobj_local(x);
+         self.time_fobj = self.time_fobj + toc(t);
+      end
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function g = gobj(self, x)
+         self.ncalls_gobj = self.ncalls_gobj + 1;
+         t = tic;
+         g = self.gobj_local(x);
+         self.time_gobj = self.time_gobj + toc(t);
+      end
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function H = hobj(self, x)
+         self.ncalls_hes = self.ncalls_hes + 1;
+         t = tic;
+         H = self.hobj_local(x);
+         self.time_hes = self.time_hes + toc(t);
       end
       
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function c = fcon(self, x)
+         self.ncalls_fcon = self.ncalls_fcon + 1;
+         t = tic;
+         c = self.fcon_local(x);
+         self.time_fcon = self.time_fcon + toc(t);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function J = gcon(self, x)
+         self.ncalls_gcon = self.ncalls_gcon + 1;
+         t = tic;
+         J = self.gcon_local(x);
+         self.time_gcon = self.time_gcon + toc(t);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function Hc = hcon(self, x, y)
+         self.ncalls_hes = self.ncalls_hes + 1;
+         t = tic;
+         Hc = self.hcon_local(x, y);
+         self.time_hes = self.time_hes + toc(t);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function H = hlag(self, x, y)
+         self.ncalls_hes = self.ncalls_hes + 1;
+         t = tic;
+         H = self.hlag_local(x, y);
+         self.time_hes = self.time_hes + toc(t);         
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function w = hlagprod(self, x, y, v)
+         self.ncalls_hvp = self.ncalls_hvp + 1;
+         t = tic;
+         w = self.hlagprod_local(x, y, v);
+         self.time_hvp = self.time_hvp + toc(t);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function w = hconprod(self, x, y, v)
+         self.ncalls_hvp = self.ncalls_hvp + 1;
+         t = tic;
+         w = self.hconprod_local(x, y, v);
+         self.time_hvp = self.time_hvp + toc(t);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function c = fcon_lin(self, x)
          %FCON_LIN  Constraint functions, linear only.
          c = self.fcon_select(x, self.linear);
       end
       
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function J = gcon_lin(self, x)
          %GCON_LIN  Constraint Jacobian, linear only.
          J = self.gcon_select(x, self.linear);
       end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       function c = fcon_nln(self, x)
          %FCON_NLN  Constraint functions, non-linear only.
          c = self.fcon_select(x, ~self.linear);
       end
       
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function J = gcon_nln(self, x)
          %GCON_NLN  Constraint Jacobian, non-linear only.
          J = self.gcon_select(x, ~self.linear);
       end
       
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function [nln_feas, lin_feas, bnd_feas] = prResidual(self, x, c)
 
          % Constraint residuals.
@@ -221,6 +249,8 @@ classdef nlpmodel < handle
          
       end % function prResidual
       
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function rNorm = duResidual(self, x, c, g, J, y, zL, zU)
          rD1 = norm(g - J'*y - zL + zU, inf ) / max([1, norm(zL), norm(zU)]);
 
@@ -241,11 +271,15 @@ classdef nlpmodel < handle
          rNorm = max( [rD1, rC1, rC2, rC3, rC4 ] );
          
       end % function duResidual
-            
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function display(self)
          %DISPLAY Display details about the problem.
          fprintf(self.formatting());
       end % function display
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function s = formatting(o)
          s = [];

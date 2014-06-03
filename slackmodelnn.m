@@ -187,15 +187,32 @@ classdef slackmodelnn < model.nlpmodel
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function f = fobj(self, xs)
+      function z = ghivprod(self, xs, gxs, vxs)
+         x = xs(self.indxs.x,:);
+         g = gxs(self.indxs.x,:);
+         v = vxs(self.indxs.x,:);
+         z = zeros(self.m,1);
+         nonlinear = ~self.linear;
+         z(nonlinear) = self.nlp.ghivprod(x, g, v);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+   end % public methods
+   
+   methods (Access = protected)
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function f = fobj_local(self, xs)
          %FOBJ  Objective function.
          x = xs(self.indxs.x,:);
-         f = fobj@model.nlpmodel(self, x);
+         f = self.nlp.fobj(x);
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function gxs = gobj(self, xs)
+      function gxs = gobj_local(self, xs)
          %HOBJ  Gradient of objective function.
          % gxs = [ g ]  x   n original gradient
          %       [ 0 ]  s   m
@@ -204,29 +221,28 @@ classdef slackmodelnn < model.nlpmodel
          %       [ 0 ]  sUc m
          %       [ 0 ]  sLc m         
          x = xs(self.indxs.x,:);
-         gx = gobj@model.nlpmodel(self, x);
+         gx = self.nlp.gobj(x);
          gxs = zeros(self.n, 1);
          gxs(self.indxs.x) = gx;
       end
          
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      function Hxs = hobj(self, xs)
+      function Hxs = hobj_local(self, xs)
          %HOBJ  Hessian of objective function.
          x = xs(self.indxs.x,:);
-         Hx = hobj@model.nlpmodel(self, x);
+         Hx = self.nlp.hobj(x);
          Hxs = sparse([],[],[],self.n, self.n,nnz(Hx));
          Hxs(self.indxs.x, self.indxs.x) = Hx;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function cxs = fcon(self, xs)
+      function cxs = fcon_local(self, xs)
          %FCON  Constraint function.
-         x = xs(self.indxs.x);
-         s = xs(self.indxs.s);
-         m = self.nlp.m;
-         cx = fcon@model.nlpmodel(self, x);
+         x = xs(self.indxs.x,:);
+         s = xs(self.indxs.s,:);
+         cx = self.nlp.fcon(x);
          % c(x) - s                         = 0  (m)
          %   x      + sUx                   = bU (n)
          %   x            - sLx             = bL (n)
@@ -243,22 +259,21 @@ classdef slackmodelnn < model.nlpmodel
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function J = gcon(self, xs)
+      function J = gcon_local(self, xs)
          %GCON  Constraint Jacobian.
-         x = xs(self.indxs.x);
-         m = self.nlp.m;
+         x = xs(self.indxs.x,:);
          J = self.J;
-         Jx = gcon@model.nlpmodel(self, x);
-         J(1:m,self.indxs.x) = Jx;
+         Jx = self.nlp.gcon(x);
+         J(1:self.nlp.m,self.indxs.x) = Jx;
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
-      function HL = hlag(self, xs, yy)
+      function HL = hlag_local(self, xs, yy)
          %HLAG  Hessian of Lagrangian (sparse matrix).
          x = xs(self.indxs.x,:);
          y = yy(1:self.nlp.m,:);
-         H = hlag@model.nlpmodel(self, x, y);
+         H = self.nlp.hlag(x, y);
          n = self.nlp.n;
          nS = self.n - n;
          HL = [ H              sparse(n, nS)
@@ -267,22 +282,22 @@ classdef slackmodelnn < model.nlpmodel
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
-      function Hv = hlagprod(self, xs, yy, vv)
+      function Hv = hlagprod_local(self, xs, yy, vv)
          %HLAGPROD  Hessian-vector product with Hessian of Lagrangian.
          x = xs(self.indxs.x,:);
          y = yy(1:self.nlp.m,:);
          v = vv(self.indxs.x,:);
          Hv = zeros(self.n, 1);
-         Hv(self.indxs.x) = hlagprod@model.nlpmodel(self, x, y, v);
+         Hv(self.indxs.x) = self.nlp.hlagprod(x, y, v);
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      function HC = hcon(self, xs, yy)
+      function HC = hcon_local(self, xs, yy)
          %HCON  Hessian of Lagrangian (without objective; sparse matrix).
          x = xs(self.indxs.x,:);
          y = yy(1:self.nlp.m,:);
-         H = hcon@model.nlpmodel(self, x, y);
+         H = self.nlp.hcon(x, y);
          n = self.nlp.n;
          nS = self.n - n;
          HC = [ H              sparse(n, nS)
@@ -291,28 +306,17 @@ classdef slackmodelnn < model.nlpmodel
             
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function Hv = hconprod(self, xs, yy, vv)
+      function Hv = hconprod_local(self, xs, yy, vv)
          %HCONPROD  Hessian-vector product with HCON.
          x = xs(self.indxs.x,:);
          y = yy(1:self.nlp.m,:);
          v = vv(self.indxs.x,:);
          Hv = zeros(self.n, 1);
-         Hv(self.indxs.x) = hconprod@model.nlpmodel(self, x, y, v);
+         Hv(self.indxs.x) = self.nlp.hconprod(x, y, v);
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      function z = ghivprod(self, xs, gxs, vxs)
-         x = xs(self.indxs.x,:);
-         g = gxs(self.indxs.x,:);
-         v = vxs(self.indxs.x,:);
-         z = zeros(self.m,1);
-         nonlinear = ~self.linear;
-         z(nonlinear) = self.nlp.ghivprod(x, g, v);
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
-   end % methods
+   end % protected methods
 
 end % classdef

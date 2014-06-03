@@ -42,7 +42,7 @@ classdef slackmodel < model.nlpmodel
          cU = zeros(nlp.m, 1);
 
          % Initial point. Set slacks to be feasible.
-         [c, J] = nlp.con(nlp.x0);
+         c = nlp.fcon(nlp.x0);
          x0 = [ nlp.x0; c ];
 
          % Instantiate from the base class.
@@ -55,11 +55,12 @@ classdef slackmodel < model.nlpmodel
          self.islack = [ false(nlp.n,1); true(nlp.m,1) ];   
 
          % Jacobian sparsity pattern of the slack model.
+         J = nlp.gcon(nlp.x0);
          self.Jpattern = [spones(J)  speye(nlp.m)];
 
          % Hessian sparsity pattern.
          y = ones(size(c));
-         HL = nlp.hesslag(nlp.x0, y);
+         HL = nlp.hlag(nlp.x0, y);
          nS = self.n - nlp.n;
          self.Hpattern = [ spones(HL)         sparse(nlp.n, nS)
                            sparse(nS, nlp.n)  sparse(nS   , nS) ];
@@ -72,82 +73,59 @@ classdef slackmodel < model.nlpmodel
          self.nlp = nlp;
          
       end
+
+   end
+   
+   methods (Access = protected)
       
-      function varargout = obj(self, xs)
-         %OBJ  Objective functions.
-         
-         % gxs = [ g ]  original gradient
-         %       [ 0 ]  gradient wrt to slacks
-         
-         varargout = cell(nargout, 1);
-         x = self.extract_original_x(xs);
-         
-         if nargout <= 1
-            f = self.nlp.obj(x);
-         elseif nargout <= 2
-            [f, gx] = self.nlp.obj(x);
-         else
-            [f, gx, Hx] = self.nlp.obj(x);
-         end
-         
-         % Objective
-         varargout(1) = {f};
-         
-         % Gradient
-         if nargout >= 2
-            gxs = [gx; zeros(self.m, 1)];
-            varargout(2) = {gxs};
-         end
-         
-         % Hessian
-         if nargout >= 3
-            nmZ = sparse(self.nlp.n, self.nlp.m);
-            mmZ = sparse(self.nlp.n, self.nlp.n);
-
-            %       x(n)   s(m)
-            Hxs = [ Hx     nmZ
-                    nmZ'   mmZ ];
-            varargout(3) = {Hxs};
-         end
+      function f = fobj_local(self, xs)
+         x = xs(~self.islack,:);
+         f = self.nlp.fobj(x);
       end
-
-      function [c, J] = con(self, xs)
-         [x, s] = self.extract_original_x(xs);
-         if nargout == 1
-            c = self.nlp.con(x);
-         else
-            [c, Jx] = self.nlp.con(x);
-            J = [Jx -speye(self.nlp.m)];         
-         end
-         c = c - s;
+      
+      function g = gobj_local(self, xs)
+         x = xs(~self.islack,:);
+         gx = self.nlp.gobj(x);
+         g = [gx; zeros(self.m, 1)];
       end
-
-      function HL = hesslag(self, xs, y)
-         x = self.extract_original_x(xs);
-         H = self.nlp.hesslag(x, y);
-
+      
+      function H = hobj_local(self, xs)
+         x = xs(~self.islack,:);
+         Hx = self.nlp.hobj(x);
+         nmZ = sparse(self.nlp.n, self.nlp.m);
+         mmZ = sparse(self.nlp.n, self.nlp.n);         
+         H = [ Hx     nmZ
+               nmZ'   mmZ ];
+      end
+      
+      function c = fcon_local(self, xs)
+         x = xs(~self.islack,:);
+         s = xs( self.islack,:);
+         c = self.nlp.fcon(x) - s;
+      end
+      
+      function J = gcon_local(self, xs)
+         x = xs(~self.islack,:);
+         Jx = self.nlp.gcon(x);
+         J = [Jx -speye(self.nlp.m)];
+      end
+      
+      function HL = hlag_local(self, xs, y)
+         x = xs(~self.islack,:);
+         H = self.nlp.hlag(x, y);
          nmZ = zeros(self.nlp.n, self.nlp.m);
          mmZ = zeros(self.nlp.m);
          HL = [ H     nmZ
                 nmZ'  mmZ ];
       end
       
-      function Hv = hesslagprod(self, xs, y, vv)
+      function Hv = hlagprod_local(self, xs, y, vv)
          x = xs(~self.islack);
          v = vv(~self.islack);
          Hv = zeros(self.n, 1);
-         Hv(~self.islack) = self.nlp.hesslagprod(x, y, v);
+         Hv(~self.islack) = self.nlp.hlagprod(x, y, v);
       end
       
    end % methods
-   
-   methods (Access=private)
-      function [x, s] = extract_original_x(self, xs)
-         x = xs(~self.islack);
-         if nargout > 1
-            s = xs(self.islack);
-         end
-      end
-   end
-   
+      
 end % classdef

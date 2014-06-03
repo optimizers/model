@@ -77,50 +77,55 @@ classdef amplmodel < model.nlpmodel
          self.sigma = self.ah.sigma;
       end
       
-      function f = fobj(self, x)
-         %FOBJ  Objective function.
-         f = self.ah.obj(x);
-      end
-      
-      function g = gobj(self, x)
-         %GOBJ  Gradient bjective function.
-         g = self.ah.grad(x);
-      end
-
-      function H = hobj(self, x)
-         %HOBJ  Hessian of bjective function.
-         H = self.ah.hessobj(x);
-      end
-
-      function c = fcon(self, x)
-         %FCON  Constraint functions, nonlinear followed by linear.
-         c = self.ah.con(x);
-      end
-
-      function J = gcon(self, x)
-         %GCON  Constraint functions Jacobian, nonlinear followed by linear.
-         J = self.ah.jac(x);
-      end
-
-      function HC = hcon(self, x, y) %#ok<INUSL>
-         HC = self.ah.hesscon(y);
-      end
-      
-      function Hv = hconprod(self, x, y, v) %#ok<INUSL>
-         Hv = self.ah.hessconprod(y, v);
-      end
-      
-      function Hv = hlagprod(self, x, y, v) %#ok<INUSL>
-         Hv = self.ah.hesslagprod(y, v);
-      end
-      
       function gHiv = ghivprod(self, x, g, v)
          gHiv = self.ah.ghivprod(x, g, v);
       end
       
-      function HL = hlag(self, x, y) %#ok<INUSL>
+   end
+   
+   methods (Access = protected)
+      
+      function f = fobj_local(self, x)
+         %FOBJ  Objective function.
+         f = self.ah.obj(x);
+      end
+      
+      function g = gobj_local(self, x)
+         %GOBJ  Gradient bjective function.
+         g = self.ah.grad(x);
+      end
+
+      function H = hobj_local(self, x)
+         %HOBJ  Hessian of bjective function.
+         H = self.ah.hessobj(x);
+      end
+
+      function c = fcon_local(self, x)
+         %FCON  Constraint functions, nonlinear followed by linear.
+         c = self.ah.con(x);
+      end
+
+      function J = gcon_local(self, x)
+         %GCON  Constraint functions Jacobian, nonlinear followed by linear.
+         J = self.ah.jac(x);
+      end
+
+      function HC = hcon_local(self, x, y) %#ok<INUSL>
+         HC = self.ah.hesscon(y);
+      end
+      
+      function Hv = hconprod_local(self, x, y, v) %#ok<INUSL>
+         Hv = self.ah.hessconprod(y, v);
+      end
+      
+      function Hv = hlagprod_local(self, x, y, v) %#ok<INUSL>
+         Hv = self.ah.hesslagprod(y, v);
+      end
+      
+      function HL = hlag_local(self, x, y) %#ok<INUSL>
          HL = self.ah.hesslag(y);
       end
-   end
+      
+   end % protected methods
    
 end % classdef
