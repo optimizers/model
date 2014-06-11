@@ -58,7 +58,7 @@ for i = 1:length(d)
    end
 
    % Only print if it meets the criterion.
-   if isempty(criterion) || ~strcmp(desc,criterion)
+   if ~isempty(criterion) && ~strcmp(desc,criterion)
       continue
    end
    

@@ -187,17 +187,6 @@ classdef slackmodelnn < model.nlpmodel
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function z = ghivprod(self, xs, gxs, vxs)
-         x = xs(self.indxs.x,:);
-         g = gxs(self.indxs.x,:);
-         v = vxs(self.indxs.x,:);
-         z = zeros(self.m,1);
-         nonlinear = ~self.linear;
-         z(nonlinear) = self.nlp.ghivprod(x, g, v);
-      end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
    end % public methods
    
    methods (Access = protected)
@@ -317,6 +306,16 @@ classdef slackmodelnn < model.nlpmodel
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
+      function z = ghivprod_local(self, xs, gxs, vxs)
+         x = xs (self.indxs.x,:);
+         g = gxs(self.indxs.x,:);
+         v = vxs(self.indxs.x,:);
+         z = zeros(self.m,1);
+         z(~self.linear) = self.nlp.ghivprod(x, g, v);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
    end % protected methods
 
 end % classdef

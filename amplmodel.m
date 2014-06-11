@@ -77,10 +77,6 @@ classdef amplmodel < model.nlpmodel
          self.sigma = self.ah.sigma;
       end
       
-      function gHiv = ghivprod(self, x, g, v)
-         gHiv = self.ah.ghivprod(x, g, v);
-      end
-      
    end
    
    methods (Access = protected)
@@ -125,6 +121,11 @@ classdef amplmodel < model.nlpmodel
       function HL = hlag_local(self, x, y) %#ok<INUSL>
          HL = self.ah.hesslag(y);
       end
+      
+      function gHiv = ghivprod_local(self, x, g, v)
+         gHiv = self.ah.ghivprod(x, g, v);
+      end
+      
       
    end % protected methods
    

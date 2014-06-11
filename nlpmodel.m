@@ -35,6 +35,7 @@ classdef nlpmodel < handle
       ncalls_gcon = 0 % constraint function
       ncalls_hvp  = 0 % Hessian Lagrangian vector-product function
       ncalls_hes  = 0 % Hessian Lagrangian function
+      ncalls_ghiv = 0 % gHiv products
       
       % Time in calls:
       time_fobj = 0 % objective function
@@ -43,6 +44,7 @@ classdef nlpmodel < handle
       time_gcon = 0 % constraint function
       time_hvp  = 0 % Hessian Lagrangian vector-product function
       time_hes  = 0 % Hessian Lagrangian function
+      time_ghiv = 0 % gHiv products
 
    end % properties
    
@@ -63,6 +65,7 @@ classdef nlpmodel < handle
       H = hlag_local(self, x, y);
       w = hlagprod_local(self, x, y, v);
       w = hconprod_local(self, x, y, v);
+      w = ghivprod_local(self, x, y, v);
    end
       
    methods (Sealed = true)
@@ -189,6 +192,15 @@ classdef nlpmodel < handle
          t = tic;
          w = self.hconprod_local(x, y, v);
          self.time_hvp = self.time_hvp + toc(t);
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      function w = ghivprod(self, x, y, v)
+         self.ncalls_ghiv = self.ncalls_ghiv + 1;
+         t = tic;
+         w = self.ghivprod_local(x, y, v);
+         self.time_ghiv = self.time_ghiv + toc(t);
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
