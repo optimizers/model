@@ -80,7 +80,11 @@ classdef amplmodel < model.nlpmodel
       function gHiv = ghivprod(self, x, g, v)
          gHiv = self.ah.ghivprod(x, g, v);
       end
-      
+
+      function write_sol(self, msg, x, y)
+         self.ah.write_sol(msg, x, y);
+      end
+
    end
 
    methods (Access = protected)
