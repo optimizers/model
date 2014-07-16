@@ -50,7 +50,11 @@ classdef nlpmodel < handle
       BMAX   =   1e20;  % Free upper bound limit
       BMIN   =  -1e20;  % Free lower bound limit
    end
-   
+
+   properties (Access = protected)
+      obj_scale  % objective function scaling
+   end
+
    methods (Access = protected)
       % These methods must be implemented by the subclass, but are not
       % directly available outside of the class.
@@ -107,7 +111,9 @@ classdef nlpmodel < handle
          % subclass should override this if it's known which constraints
          % are linear.
          o.linear = false(o.m, 1);
-         
+
+         % No scaling by default.
+         o.obj_scale = 1.0;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -115,7 +121,7 @@ classdef nlpmodel < handle
       function f = fobj(self, x)
          self.ncalls_fobj = self.ncalls_fobj + 1;
          t = tic;
-         f = self.fobj_local(x);
+         f = self.fobj_local(x) * self.obj_scale;
          self.time_fobj = self.time_fobj + toc(t);
       end
 
@@ -124,7 +130,7 @@ classdef nlpmodel < handle
       function g = gobj(self, x)
          self.ncalls_gobj = self.ncalls_gobj + 1;
          t = tic;
-         g = self.gobj_local(x);
+         g = self.gobj_local(x) * self.obj_scale;
          self.time_gobj = self.time_gobj + toc(t);
       end
 
@@ -133,7 +139,7 @@ classdef nlpmodel < handle
       function H = hobj(self, x)
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
-         H = self.hobj_local(x);
+         H = self.hobj_local(x) * self.obj_scale;
          self.time_hes = self.time_hes + toc(t);
       end
 
@@ -218,7 +224,21 @@ classdef nlpmodel < handle
          %GCON_NLN  Constraint Jacobian, non-linear only.
          J = self.gcon_select(x, ~self.linear);
       end
-      
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function scale = scale_obj(self, x)
+        if nargin == 1
+          x = self.x0;
+        end
+        g_max = 1.0e+2;
+        f = self.fobj(x);  % Ensure fobj has been called at the same x
+        g = self.gobj(x);
+        gNorm = norm(g, inf);
+        scale = g_max / max(g_max, gNorm);  % <= 1 always
+        self.obj_scale = scale;
+      end
+
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function [nln_feas, lin_feas, bnd_feas] = prResidual(self, x, c)
