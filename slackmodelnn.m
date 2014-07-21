@@ -184,13 +184,7 @@ classdef slackmodelnn < model.nlpmodel
          self.indx  = indxl;
          self.inds  = indsl;
       end
-      
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-   end % public methods
-   
-   methods (Access = protected)
-      
+            
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function f = fobj_local(self, xs)

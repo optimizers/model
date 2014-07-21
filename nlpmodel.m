@@ -52,22 +52,7 @@ classdef nlpmodel < handle
       BMAX   =   1e20;  % Free upper bound limit
       BMIN   =  -1e20;  % Free lower bound limit
    end
-   
-   methods (Access = protected)
-      % These methods must be implemented by the subclass, but are not
-      % directly available outside of the class.
-      f = fobj_local(self, x);
-      g = gobj_local(self, x);
-      H = hobj_local(self, x);
-      c = fcon_local(self, x);
-      J = gcon_local(self, x);
-      H = hcon_local(self, x, y);
-      H = hlag_local(self, x, y);
-      w = hlagprod_local(self, x, y, v);
-      w = hconprod_local(self, x, y, v);
-      w = ghivprod_local(self, x, y, v);
-   end
-      
+         
    methods (Sealed = true)
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

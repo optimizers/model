@@ -74,10 +74,6 @@ classdef slackmodel < model.nlpmodel
          
       end
 
-   end
-   
-   methods (Access = protected)
-      
       function f = fobj_local(self, xs)
          x = xs(~self.islack,:);
          f = self.nlp.fobj(x);
