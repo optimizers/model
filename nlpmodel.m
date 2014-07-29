@@ -329,6 +329,22 @@ classdef nlpmodel < handle
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+   methods
+
+      function [f, g, H] = obj(self, x)
+         f = self.fobj(x);
+         if nargout > 1
+          g = self.gobj(x);
+        end
+        if nargout > 2
+          H = self.hobj(x);
+        end
+      end
+
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
    methods (Access = private, Hidden = true)
 
       function c = fcon_select(self, x, select)
