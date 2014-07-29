@@ -100,7 +100,7 @@ classdef amplmodel < model.nlpmodel
       end
 
       function H = hobj_local(self, x)
-         %HOBJ  Hessian of bjective function.
+         %HOBJ  Hessian of objective function.
          H = self.ah.hessobj(x);
       end
 
