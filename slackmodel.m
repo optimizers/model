@@ -82,14 +82,14 @@ classdef slackmodel < model.nlpmodel
       function g = gobj_local(self, xs)
          x = xs(~self.islack,:);
          gx = self.nlp.gobj(x);
-         g = [gx; zeros(self.m, 1)];
+         g = [gx; zeros(self.nlp.m, 1)];
       end
       
       function H = hobj_local(self, xs)
          x = xs(~self.islack,:);
          Hx = self.nlp.hobj(x);
          nmZ = sparse(self.nlp.n, self.nlp.m);
-         mmZ = sparse(self.nlp.n, self.nlp.n);         
+         mmZ = sparse(self.nlp.m, self.nlp.m);
          H = [ Hx     nmZ
                nmZ'   mmZ ];
       end

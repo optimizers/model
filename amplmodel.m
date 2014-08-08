@@ -3,14 +3,14 @@ classdef amplmodel < model.nlpmodel
    properties (SetAccess = private, Hidden = true)
       ah              % ampl handle
    end
-   
+
    properties
       sigma           % scale of the Lagrangian
       sparse          % flag indicates is dense of sparse model
    end
-   
+
    methods
-      
+
       function self = amplmodel(fname, sparse)
          %AMPLMODEL Constructor.
          
@@ -19,19 +19,19 @@ classdef amplmodel < model.nlpmodel
             sparse = false;
          end
          ahl = ampl.ampl_interface(fname, sparse);
-         
+
          % Problem name.
          [~, name, ~] = fileparts(fname);
          
          % Number nonlinear constraints.
          nlc = ahl.nlc;
-         
+
          % Instantiate the base class.
          self = self@model.nlpmodel(name, ahl.x0, ahl.cl, ahl.cu, ahl.bl, ahl.bu);
          
          % Record sparsity flag
          self.sparse = sparse;
-         
+
          % Store the ampl handle.
          self.ah = ahl;
          
@@ -54,15 +54,15 @@ classdef amplmodel < model.nlpmodel
          else
             self.Hpattern = ones(size(H));
          end
-         
+
          % Categorize nonlinear constraints. Ampl orders nonlinear
          % constraints first.
          self.linear = true(self.m, 1);
          self.linear(1:nlc) = false;
-         
+
          % Get the scale of the Lagrangian.
          self.sigma = ahl.sigma;
-         
+
       end
       
       function self = lagscale(self, sigma)
@@ -76,19 +76,23 @@ classdef amplmodel < model.nlpmodel
          self.ah.lagscale(sigma);
          self.sigma = self.ah.sigma;
       end
-      
+
+      function write_sol(self, msg, x, y)
+         self.ah.write_sol(msg, x, y);
+      end
+
       function f = fobj_local(self, x)
          %FOBJ  Objective function.
          f = self.ah.obj(x);
       end
-      
+
       function g = gobj_local(self, x)
          %GOBJ  Gradient bjective function.
          g = self.ah.grad(x);
       end
       
       function H = hobj_local(self, x)
-         %HOBJ  Hessian of bjective function.
+         %HOBJ  Hessian of objective function.
          H = self.ah.hessobj(x);
       end
       
@@ -105,15 +109,15 @@ classdef amplmodel < model.nlpmodel
       function HC = hcon_local(self, x, y) %#ok<INUSL>
          HC = self.ah.hesscon(y);
       end
-      
+
       function Hv = hconprod_local(self, x, y, v) %#ok<INUSL>
          Hv = self.ah.hessconprod(y, v);
       end
-      
+
       function Hv = hlagprod_local(self, x, y, v) %#ok<INUSL>
          Hv = self.ah.hesslagprod(y, v);
       end
-      
+
       function HL = hlag_local(self, x, y) %#ok<INUSL>
          HL = self.ah.hesslag(y);
       end
@@ -123,5 +127,5 @@ classdef amplmodel < model.nlpmodel
       end
       
    end
-   
+
 end % classdef
