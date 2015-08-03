@@ -1,7 +1,7 @@
-function classify(dirname, varargin)
-%CLASSIFY  List of problems in a directory and their characteristics.
+function model_classify(dirname, varargin)
+%MODEL_CLASSIFY  List of problems in a directory and their characteristics.
 %
-% classify('dir name')
+% model_classify('dir name')
 
 p = inputParser;
 p.addParameter('criterion','');
