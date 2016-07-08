@@ -47,14 +47,14 @@ classdef nlpmodel < handle
       time_ghiv = 0 % gHiv products
 
       obj_scale     % objective scaling
-      
+
    end % properties
 
    properties (Hidden=true, Constant)
       BMAX   =   1e20;  % Free upper bound limit
       BMIN   =  -1e20;  % Free lower bound limit
    end
-   
+
    methods (Sealed = true)
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,14 +184,14 @@ classdef nlpmodel < handle
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
       function w = ghivprod(self, x, y, v)
          self.ncalls_ghiv = self.ncalls_ghiv + 1;
          t = tic;
          w = self.ghivprod_local(x, y, v);
          self.time_ghiv = self.time_ghiv + toc(t);
       end
-      
+
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function c = fcon_lin(self, x)
@@ -227,11 +227,17 @@ classdef nlpmodel < handle
           x = self.x0;
         end
         g_max = 1.0e+2;
-        f = self.fobj(x);  % Ensure fobj has been called at the same x
+        self.fobj(x);  % Ensure fobj has been called at the same x
         g = self.gobj(x);
         gNorm = norm(g, inf);
         scale = g_max / max(g_max, gNorm);  % <= 1 always
         self.obj_scale = scale;
+      end
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      function [] = unscale_obj(self)
+        self.obj_scale = 1.0;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -289,7 +295,7 @@ classdef nlpmodel < handle
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function display(self)
+      function disp(self)
          %DISPLAY Display details about the problem.
          fprintf(self.formatting());
       end % function display
@@ -337,6 +343,21 @@ classdef nlpmodel < handle
       end
 
    end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  %  methods (Abstract = true)
+  %     f = fobj_local(self, x)
+  %     g = gobj_local(self, x)
+  %     H = hobj_local(self, x)
+  %     c = fcon_local(self, x)
+  %     J = gcon_local(self, x)
+  %     HC = hcon_local(self, x, y)
+  %     Hv = hconprod_local(self, x, y, v)
+  %     Hv = hlagprod_local(self, x, y, v)
+  %     HL = hlag_local(self, x, y)
+  %     gHiv = ghivprod_local(self, x, g, v)
+  %  end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
