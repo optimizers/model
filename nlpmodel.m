@@ -159,9 +159,12 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function H = hlag(self, x, y)
+         if self.obj_scale ~= 1.0
+           warn('the objective function scaling is not reflected in the Hessian of the Lagrangian');
+         end
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
-         H = self.hlag_local(x, y);
+         H = self.hlag_local(x, y, self.obj_scale);
          self.time_hes = self.time_hes + toc(t);
       end
 
@@ -177,6 +180,9 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function w = hlagprod(self, x, y, v)
+         if self.obj_scale ~= 1.0
+           warn('the objective function scaling is not reflected in the Hessian of the Lagrangian');
+         end
          self.ncalls_hvp = self.ncalls_hvp + 1;
          t = tic;
          w = self.hlagprod_local(x, y, v);
