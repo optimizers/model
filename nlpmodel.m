@@ -167,6 +167,15 @@ classdef nlpmodel < handle
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+      function w = hobjprod(self, x, v)
+         self.ncalls_hvp = self.ncalls_hvp + 1;
+         t = tic;
+         w = self.hlagprod_local(x, zeros(self.m, 1), v) * self.obj_scale;
+         self.time_hvp = self.time_hvp + toc(t);
+      end
+
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       function w = hlagprod(self, x, y, v)
          self.ncalls_hvp = self.ncalls_hvp + 1;
          t = tic;
