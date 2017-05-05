@@ -48,11 +48,13 @@ classdef nlpmodel < handle
 
       obj_scale     % objective scaling
       
+      modified      % was problem modified during this iteration
+      
    end % properties
 
    properties (Hidden=true, Constant)
-      BMAX   =   1e20;  % Free upper bound limit
-      BMIN   =  -1e20;  % Free lower bound limit
+      BMAX   =   1e32;  % Free upper bound limit
+      BMIN   =  -1e32;  % Free lower bound limit
    end
    
    methods (Sealed = true)
@@ -272,9 +274,15 @@ classdef nlpmodel < handle
          jj = ~self.jFix & self.jLow;
          rC1 = norm( min(1,zL(jj)) .* (x(jj) - self.bL(jj)), inf );
 
+         jj = ~self.jTwo & self.jUpp;
+         rL  = norm( zL(jj), inf );
+         
          jj = ~self.jFix & self.jUpp;
          rC2 = norm( min(1,zU(jj)) .* (self.bU(jj) - x(jj)), inf );
 
+         jj = ~self.jTwo & self.jLow;
+         rU  = norm( zU(jj), inf );
+         
          ii = ~self.iFix & self.iLow;
          yp  = min(1, +max(y, 0));
          rC3 = norm( yp(ii) .* (c(ii) - self.cL(ii)), inf );
@@ -283,7 +291,7 @@ classdef nlpmodel < handle
          ym  = min(1, -min(y, 0));
          rC4 = norm( ym(ii) .* (self.cU(ii) - c(ii)), inf);
 
-         rNorm = max( [rD1, rC1, rC2, rC3, rC4 ] );
+         rNorm = max( [rD1, rC1, rC2, rC3, rC4, rL, rU ] );
 
       end % function duResidual
 
@@ -316,7 +324,7 @@ classdef nlpmodel < handle
          s = [s  sprintf('            lower: %5i\n'  ,sum(o.iLow & ~o.iTwo))];
          s = [s  sprintf('            fixed: %5i'    ,sum(o.jFix))];
          s = [s  sprintf('%10s','')];
-         s = [s  sprintf('            upper: %5i'    ,sum(o.jUpp & ~o.jTwo))];
+         s = [s  sprintf('            upper: %5i'    ,sum(o.iUpp & ~o.iTwo))];
          s = [s  sprintf('\n')];
       end
 
