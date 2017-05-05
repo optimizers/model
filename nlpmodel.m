@@ -269,7 +269,17 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function rNorm = duResidual(self, x, c, g, J, y, zL, zU)
-         rD1 = norm(g - J'*y - zL + zU, inf ) / max([1, norm(zL), norm(zU)]);
+         r = g - J'*y;
+         if nargin < 7
+             zL = zeros(self.n,1);
+             zU = zeros(self.n,1);
+             zL(r>0) = r(r>0);
+             zU(r<0) = r(r<0);
+             zL(self.jFre) = 0;
+             zU(self.jFre) = 0;
+         end
+          
+         rD1 = norm(r - zL + zU, inf ) / max([1, norm(zL), norm(zU)]);
 
          jj = ~self.jFix & self.jLow;
          rC1 = norm( min(1,zL(jj)) .* (x(jj) - self.bL(jj)), inf );
