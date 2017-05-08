@@ -273,12 +273,12 @@ classdef nlpmodel < handle
          if nargin < 7
              zL = zeros(self.n,1);
              zU = zeros(self.n,1);
-             zL(r>0) = r(r>0);
-             zU(r<0) = r(r<0);
+             zL(r>0) =  r(r>0);
+             zU(r<0) = -r(r<0);
              zL(self.jFre) = 0;
              zU(self.jFre) = 0;
          end
-          
+
          rD1 = norm(r - zL + zU, inf ) / max([1, norm(zL), norm(zU)]);
 
          jj = ~self.jFix & self.jLow;
@@ -334,7 +334,8 @@ classdef nlpmodel < handle
          s = [s  sprintf('            lower: %5i\n'  ,sum(o.iLow & ~o.iTwo))];
          s = [s  sprintf('            fixed: %5i'    ,sum(o.jFix))];
          s = [s  sprintf('%10s','')];
-         s = [s  sprintf('            upper: %5i'    ,sum(o.iUpp & ~o.iTwo))];
+         s = [s  sprintf('            upper: %5i\n'    ,sum(o.iUpp & ~o.iTwo))];
+         s = [s  sprintf('%44slow/upp: %5i','',sum(o.iTwo & ~o.iFix))];
          s = [s  sprintf('\n')];
       end
 
