@@ -48,8 +48,9 @@ classdef nlpmodel < handle
 
       obj_scale     % objective scaling
       
-      modified      % was problem modified during this iteration
-      
+      dc            % Variable scaling (columns of Jacobian)
+      dr            % Constraint scaling (rows of Jacobian)
+                    % dr*J*dc = Jbar where Jbar is well-conditioned
    end % properties
 
    properties (Hidden=true, Constant)
@@ -102,14 +103,29 @@ classdef nlpmodel < handle
 
          % No scaling by default.
          o.obj_scale = 1.0;
+         o.dc = ones(o.n,1);
+         o.dr = ones(o.m,1);
       end
 
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      function set_scaling(self, dc, dr)
+         % Apply new rhs scaling while undoing previous
+         self.cL = (dr.*self.cL)./self.dr;
+         self.cU = (dr.*self.cU)./self.dr;
+         self.bL = (self.bL./dc).*self.dc;
+         self.bU = (self.bU./dc).*self.dc;
+         
+         self.dc = dc;
+         self.dr = dr;
+      end
+      
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function f = fobj(self, x)
          self.ncalls_fobj = self.ncalls_fobj + 1;
          t = tic;
-         f = self.fobj_local(x) * self.obj_scale;
+         f = self.fobj_local(self.dc.*x) * self.obj_scale;
          self.time_fobj = self.time_fobj + toc(t);
       end
 
@@ -118,7 +134,7 @@ classdef nlpmodel < handle
       function g = gobj(self, x)
          self.ncalls_gobj = self.ncalls_gobj + 1;
          t = tic;
-         g = self.gobj_local(x) * self.obj_scale;
+         g = self.dc.*self.gobj_local(self.dc.*x) * self.obj_scale;
          self.time_gobj = self.time_gobj + toc(t);
       end
 
@@ -127,7 +143,8 @@ classdef nlpmodel < handle
       function H = hobj(self, x)
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
-         H = self.hobj_local(x) * self.obj_scale;
+         dC = spdiags(self.dc,0,self.n,self.n);
+         H = dC*self.hobj_local(self.dc.*x) * dC * self.obj_scale;
          self.time_hes = self.time_hes + toc(t);
       end
 
@@ -136,7 +153,7 @@ classdef nlpmodel < handle
       function c = fcon(self, x)
          self.ncalls_fcon = self.ncalls_fcon + 1;
          t = tic;
-         c = self.fcon_local(x);
+         c = self.dr.*self.fcon_local(self.dc.*x);
          self.time_fcon = self.time_fcon + toc(t);
       end
 
@@ -145,7 +162,9 @@ classdef nlpmodel < handle
       function J = gcon(self, x)
          self.ncalls_gcon = self.ncalls_gcon + 1;
          t = tic;
-         J = self.gcon_local(x);
+         dR = spdiags(self.dr,0,self.m,self.m);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         J = dR*self.gcon_local(self.dc.*x)*dC;
          self.time_gcon = self.time_gcon + toc(t);
       end
 
@@ -154,7 +173,8 @@ classdef nlpmodel < handle
       function Hc = hcon(self, x, y)
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
-         Hc = self.hcon_local(x, y);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         Hc = dC*self.hcon_local(self.dc.*x, self.dr.*y)*dC;
          self.time_hes = self.time_hes + toc(t);
       end
 
@@ -163,7 +183,8 @@ classdef nlpmodel < handle
       function H = hlag(self, x, y)
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
-         H = self.hlag_local(x, y);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         H = dC*self.hlag_local(self.dc.*x, self.dr.*y)*dC;
          self.time_hes = self.time_hes + toc(t);
       end
 
@@ -172,7 +193,8 @@ classdef nlpmodel < handle
       function w = hlagprod(self, x, y, v)
          self.ncalls_hvp = self.ncalls_hvp + 1;
          t = tic;
-         w = self.hlagprod_local(x, y, v);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         w = dC*self.hlagprod_local(self.dc.*x, self.dr.*y, self.dc.*v);
          self.time_hvp = self.time_hvp + toc(t);
       end
 
@@ -181,7 +203,8 @@ classdef nlpmodel < handle
       function w = hconprod(self, x, y, v)
          self.ncalls_hvp = self.ncalls_hvp + 1;
          t = tic;
-         w = self.hconprod_local(x, y, v);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         w = dC*self.hconprod_local(self.dc.*x, self.dr.*y, self.dc.*v);
          self.time_hvp = self.time_hvp + toc(t);
       end
 
@@ -190,7 +213,7 @@ classdef nlpmodel < handle
       function w = ghivprod(self, x, y, v)
          self.ncalls_ghiv = self.ncalls_ghiv + 1;
          t = tic;
-         w = self.ghivprod_local(x, y, v);
+         w = self.ghivprod_local(self.dc.*x, self.dc.*y, self.dc.*v);
          self.time_ghiv = self.time_ghiv + toc(t);
       end
       
@@ -198,28 +221,33 @@ classdef nlpmodel < handle
 
       function c = fcon_lin(self, x)
          %FCON_LIN  Constraint functions, linear only.
-         c = self.fcon_select(x, self.linear);
+         c = self.dr(self.linear).*self.fcon_select(self.dc.*x, self.linear);
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function J = gcon_lin(self, x)
          %GCON_LIN  Constraint Jacobian, linear only.
-         J = self.gcon_select(x, self.linear);
+         dR = spdiags(self.dr,0,self.m,self.m);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         J = dR(self.linear,self.linear)*self.gcon_select(self.dc.*x, self.linear)*dC;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function c = fcon_nln(self, x)
          %FCON_NLN  Constraint functions, non-linear only.
-         c = self.fcon_select(x, ~self.linear);
+         dR = spdiags(self.dr,0,self.m,self.m);
+         c = dR(~self.linear,~self.linear)*self.fcon_select(self.dc.*x, ~self.linear);
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function J = gcon_nln(self, x)
          %GCON_NLN  Constraint Jacobian, non-linear only.
-         J = self.gcon_select(x, ~self.linear);
+         dR = spdiags(self.dr,0,self.m,self.m);
+         dC = spdiags(self.dc,0,self.n,self.n);
+         J = dR(~self.linear,~self.linear)*self.gcon_select(self.dc.*x, ~self.linear)*dC;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -238,11 +266,26 @@ classdef nlpmodel < handle
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function [nln_feas, lin_feas, bnd_feas] = prResidual(self, x, c)
+      function [nln_feas, lin_feas, bnd_feas] = prResidual(self, x, c, scaled)
+          
+         bl = self.bL;
+         bu = self.bU;
+         cl = self.cL;
+         cu = self.cU;
+         
+         if nargin < 4 || scaled == true
+         else
+            x = x ./ self.dc;
+            c = c ./ self.dr;
+            bl = bl .* self.dc;
+            bu = bu .* self.dc;
+            cl = cl ./ self.dr;
+            cu = cu ./ self.dr;
+         end
 
          % Constraint residuals.
-         rcL = min(c - self.cL, 0);
-         rcU = min(self.cU - c, 0);
+         rcL = min(c - cl, 0);
+         rcU = min(cu - c, 0);
 
          % Nonlinear infeasibility.
          nln_rcL = rcL(~self.linear);
@@ -255,8 +298,8 @@ classdef nlpmodel < handle
          lin_feas = max( norm(lin_rcL, inf), norm(lin_rcU, inf ));
 
          % Bounds infeasibility.
-         bnd_feas_low = norm(max(self.bL - x, 0), inf);
-         bnd_feas_upp = norm(max(x - self.bU, 0), inf);
+         bnd_feas_low = norm(max(bl - x, 0), inf);
+         bnd_feas_upp = norm(max(x - bu, 0), inf);
          bnd_feas = max(bnd_feas_low, bnd_feas_upp);
 
          % Bundle into an aggregate if only one output.
@@ -268,9 +311,9 @@ classdef nlpmodel < handle
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function rNorm = duResidual(self, x, c, g, J, y, zL, zU)
+      function rNorm = duResidual(self, x, c, g, J, y, zL, zU, scaled)
          r = g - J'*y;
-         if nargin < 7
+         if nargin < 7 || (isempty(zL) && isempty(zU))
              zL = zeros(self.n,1);
              zU = zeros(self.n,1);
              zL(r>0) =  r(r>0);
@@ -279,6 +322,16 @@ classdef nlpmodel < handle
              zU(self.jFre) = 0;
          end
 
+         if nargin < 8 || scaled == true
+         else
+            x  = x ./  self.dc;
+            c  = c ./ self.dr;
+            r  = r ./ self.dc;
+            y  = y .* self.dr;
+            zL = zL ./ self.dc;
+            zU = zU ./ self.dc;
+         end
+         
          rD1 = norm(r - zL + zU, inf ) / max([1, norm(zL), norm(zU)]);
 
          jj = ~self.jFix & self.jLow;
