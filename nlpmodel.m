@@ -213,7 +213,7 @@ classdef nlpmodel < handle
       function w = ghivprod(self, x, y, v)
          self.ncalls_ghiv = self.ncalls_ghiv + 1;
          t = tic;
-         w = self.ghivprod_local(self.dc.*x, self.dc.*y, self.dc.*v);
+         w = self.dr.*self.ghivprod_local(self.dc.*x, self.dc.*y, self.dc.*v);
          self.time_ghiv = self.time_ghiv + toc(t);
       end
       

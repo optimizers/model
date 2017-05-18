@@ -304,8 +304,7 @@ classdef slackmodelnn < model.nlpmodel
          x = xs (self.indxs.x,:);
          g = gxs(self.indxs.x,:);
          v = vxs(self.indxs.x,:);
-         z = zeros(self.m,1);
-         z(~self.linear) = self.nlp.ghivprod(x, g, v);
+         z = self.nlp.ghivprod(x, g, v);
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -123,7 +123,8 @@ classdef amplmodel < model.nlpmodel
       end
       
       function gHiv = ghivprod_local(self, x, g, v)
-         gHiv = self.ah.ghivprod(x, g, v);
+         gHiv = zeros(self.m,1);
+         gHiv(~self.linear) = self.ah.ghivprod(x, g, v);
       end
       
    end

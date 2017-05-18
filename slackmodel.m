@@ -144,8 +144,7 @@ classdef slackmodel < model.nlpmodel
          x = xs (~self.islack);
          g = gxs(~self.islack);
          v = vxs(~self.islack);
-         z = zeros(self.m,1);
-         z(~self.linear) = self.nlp.ghivprod(x, g, v);
+         z = self.nlp.ghivprod(x, g, v);
       end
       
    end % methods
