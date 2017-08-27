@@ -1,5 +1,5 @@
 classdef amplmodel < model.nlpmodel
-   
+
    properties (SetAccess = private, Hidden = true)
       ah              % ampl handle
    end
@@ -13,7 +13,7 @@ classdef amplmodel < model.nlpmodel
 
       function self = amplmodel(fname, sparse)
          %AMPLMODEL Constructor.
-         
+
          % Construct handle to either sparse or dense interface.
          if nargin < 2 || isempty(sparse)
             sparse = false;
@@ -22,30 +22,30 @@ classdef amplmodel < model.nlpmodel
 
          % Problem name.
          [~, name, ~] = fileparts(fname);
-         
+
          % Number nonlinear constraints.
          nlc = ahl.nlc;
 
          % Instantiate the base class.
          self = self@model.nlpmodel(name, ahl.x0, ahl.cl, ahl.cu, ahl.bl, ahl.bu);
-         
+
          % Record sparsity flag
          self.sparse = sparse;
 
          % Store the ampl handle.
          self.ah = ahl;
-         
+
          % Evaluate constraint and Jacobian at x0.
          c = ahl.con(ahl.x0);
          J = ahl.jac(ahl.x0);
-         
+
          % Jacobian sparsity pattern.
          if issparse(J)
             self.Jpattern = spones(J);
          else
             self.Jpattern = ones(size(J));
          end
-         
+
          % Hessian sparsity pattern.
          y = zeros(size(c));
          H = ahl.hesslag(y);
@@ -64,7 +64,7 @@ classdef amplmodel < model.nlpmodel
          self.sigma = ahl.sigma;
 
       end
-      
+
       function self = lagscale(self, sigma)
          %LAGSCALE  Set the scale of the Lagrangian.
          %
@@ -88,44 +88,57 @@ classdef amplmodel < model.nlpmodel
 
       function g = gobj_local(self, x)
          %GOBJ  Gradient bjective function.
+         [~] = self.ah.obj(x);
          g = self.ah.grad(x);
       end
-      
+
       function H = hobj_local(self, x)
          %HOBJ  Hessian of objective function.
+         [~] = self.ah.obj(x);
          H = self.ah.hessobj(x);
       end
-      
+
       function c = fcon_local(self, x)
          %FCON  Constraint functions, nonlinear followed by linear.
          c = self.ah.con(x);
       end
-      
+
       function J = gcon_local(self, x)
          %GCON  Constraint functions Jacobian, nonlinear followed by linear.
+         [~] = self.ah.con(x);
          J = self.ah.jac(x);
       end
-      
+
       function HC = hcon_local(self, x, y) %#ok<INUSL>
-         HC = self.ah.hesscon(y);
+         [~] = self.ah.obj(x);
+         [~] = self.ah.con(x);
+         HC = self.ah.hesscon(x, y);
       end
 
       function Hv = hconprod_local(self, x, y, v) %#ok<INUSL>
+         [~] = self.ah.obj(x);
+         [~] = self.ah.con(x);
          Hv = self.ah.hessconprod(y, v);
       end
 
       function Hv = hlagprod_local(self, x, y, v) %#ok<INUSL>
+         [~] = self.ah.obj(x);
+         [~] = self.ah.con(x);
          Hv = self.ah.hesslagprod(y, v);
       end
 
-      function HL = hlag_local(self, x, y) %#ok<INUSL>
+      function HL = hlag_local(self, x, y, varargin) %#ok<INUSL>
+         [~] = self.ah.obj(x);
+         [~] = self.ah.con(x);
          HL = self.ah.hesslag(y);
       end
-      
+
       function gHiv = ghivprod_local(self, x, g, v)
+         [~] = self.ah.obj(x);
+         [~] = self.ah.con(x);
          gHiv = self.ah.ghivprod(x, g, v);
       end
-      
+
    end
 
 end % classdef
