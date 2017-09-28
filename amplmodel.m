@@ -124,7 +124,8 @@ classdef amplmodel < model.nlpmodel
       
       function gHiv = ghivprod_local(self, x, g, v)
          gHiv = zeros(self.m,1);
-         gHiv(~self.linear) = self.ah.ghivprod(x, g, v);
+         % AMPL interface defines this as negative of definition in paper
+         gHiv(~self.linear) = -self.ah.ghivprod(x, g, v);
       end
       
    end
