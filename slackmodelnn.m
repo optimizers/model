@@ -251,6 +251,21 @@ classdef slackmodelnn < model.nlpmodel
       end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      function [Jprod, Jtprod] = gconprod_local(self, x)
+%          Jxs = self.J;
+%          n = self.nlp.n;
+%          m = self.nlp.m;
+%          Jxs(1:m,1:n) = sparse(m,n);
+%          [Jxprod, Jxtprod] = self.nlp.gconprod(x(1:n));
+%          Jprod = @(v) [Jxprod(v(1:n)); zeros(self.m - m,1)] + Jxs*v;
+%          Jtprod = @(v) [Jxtprod(v(1:m)); zeros(self.n-n,1)] + Jxs'*v;
+           J = self.gcon(x);
+           Jprod = @(v) J*v;
+           Jtprod = @(v) J'*v;
+      end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
       function HL = hlag_local(self, xs, yy)
          %HLAG  Hessian of Lagrangian (sparse matrix).

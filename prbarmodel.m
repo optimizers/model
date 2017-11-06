@@ -102,6 +102,10 @@ classdef prbarmodel < model.nlpmodel
          J = self.nlp.gcon(x);
       end
       
+      function [Jprod, Jtprod] = gconprod_local(self, x)
+         [Jprod, Jtprod] = self.nlp.gconprod(x);
+      end
+      
       function HL = hlag_local(self, x, y)
          bL = self.nlp.bL;
          jLow = self.nlp.jLow;

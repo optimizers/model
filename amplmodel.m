@@ -106,6 +106,12 @@ classdef amplmodel < model.nlpmodel
          J = self.ah.jac(x);
       end
       
+      function [Jprod, Jtprod] = gconprod_local(self, x)
+         J = self.ah.jac(x);
+         Jprod = @(v) J*v;
+         Jtprod = @(v) J'*v;
+      end
+      
       function HC = hcon_local(self, x, y) %#ok<INUSL>
          HC = self.ah.hesscon(y);
       end

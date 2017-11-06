@@ -6,6 +6,7 @@ classdef nlpproblem < model.nlpmodel
     hobj_loc
     fcon_loc
     gcon_loc
+    gconprod_loc
     hcon_loc
     hlag_loc
     hconprod_loc
@@ -43,6 +44,11 @@ classdef nlpproblem < model.nlpmodel
       function J = gcon_local(self, x)
          %GCON  Constraint functions Jacobian, nonlinear followed by linear.
          J = self.gcon_loc(x);
+      end
+      
+      function [Jprod, Jtprod] = gconprod_local(self, x)
+         %GCON  Constraint functions Jacobian, nonlinear followed by linear.
+         [Jprod, Jtprod] = self.gconprod_loc(x);
       end
       
       function HC = hcon_local(self, x, y)

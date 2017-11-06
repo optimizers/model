@@ -99,6 +99,12 @@ classdef regmodel < model.nlpmodel
          J = [Jx self.delta*speye(self.nlp.m)];
       end
       
+      function [Jprod, Jtprod] = gconprod_local(self, xr)
+         [Jxprod, Jxtprod] = self.nlp.gconprod(xr(~self.ireg,:));
+         Jprod = @(v) Jxprod(v(~self.ireg)) + self.delta*v(self.ireg,:);
+         Jtprod = @(v) [Jxtprod(v); self.delta*v];
+      end
+      
       function HL = hlag_local(self, xr, y)
          %HLAG  Hessian of Lagrangian (sparse matrix).
          x = xr(~self.ireg,:);

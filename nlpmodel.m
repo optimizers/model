@@ -25,9 +25,9 @@ classdef nlpmodel < handle
       iTwo    % upper/lower-bounded constraints
       linear  % logical array indicating linear constraints
 
-      Jpattern% Jacobian sparsity pattern
-      Hpattern% Jacobian sparsity pattern
-
+      Jpattern; % Jacobian sparsity pattern
+      Hpattern; % Hessian sparsity pattern 
+      
       % Number of calls counter:
       ncalls_fobj = 0 % objective function
       ncalls_gobj = 0 % objective function
@@ -52,7 +52,7 @@ classdef nlpmodel < handle
       dr            % Constraint scaling (rows of Jacobian)
                     % dr*J*dc = Jbar where Jbar is well-conditioned
    end % properties
-
+   
    properties (Hidden=true, Constant)
       BMAX   =   1e32;  % Free upper bound limit
       BMIN   =  -1e32;  % Free lower bound limit
@@ -167,7 +167,18 @@ classdef nlpmodel < handle
          J = dR*self.gcon_local(self.dc.*x)*dC;
          self.time_gcon = self.time_gcon + toc(t);
       end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+      function [Jprod, Jtprod] = gconprod(self, x)
+         self.ncalls_gcon = self.ncalls_gcon + 1;
+         t = tic;
+         [Jprod_local, Jtprod_local] = self.gconprod_local(self.dc.*x);
+         Jprod = @(v) self.dr.*Jprod_local(self.dc.*v);
+         Jtprod = @(v) self.dc.*Jtprod_local(self.dr.*v);
+         self.time_gcon = self.time_gcon + toc(t);
+      end    
+      
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function Hc = hcon(self, x, y)
@@ -312,7 +323,11 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function rNorm = duResidual(self, x, c, g, J, y, zL, zU, scaled)
-         r = g - J'*y;
+         if isa(J, 'numeric')
+            r = g - J'*y;
+         else
+            r = g - J(y); % J should be handle to function to compute J'*y 
+         end
          if nargin < 7 || (isempty(zL) && isempty(zU))
              zL = zeros(self.n,1);
              zU = zeros(self.n,1);
@@ -408,6 +423,14 @@ classdef nlpmodel < handle
         end
       end
 
+      function J = gcon_local(self, ~)
+          J = sparse(self.m, self.n);
+      end
+      
+      function P = preconditioner(~, ~)
+          P = @(x) x;
+      end
+      
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

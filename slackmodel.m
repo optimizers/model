@@ -60,13 +60,13 @@ classdef slackmodel < model.nlpmodel
          nS = sum(~nlp.iFix);
          self.nslack = nS;
          self.islack = [ false(nlp.n,1); true(nS,1) ];   
-
+ 
          % Jacobian sparsity pattern of the slack model.
          J = nlp.gcon(nlp.x0);
          Js = sparse(nlp.m,nS);
          Js(~nlp.iFix,:) = speye(nS);
          self.Jpattern = [spones(J)  Js];
-
+         
          % Hessian sparsity pattern.
          y = ones(size(c));
          HL = nlp.hlag(nlp.x0, y);
@@ -115,6 +115,17 @@ classdef slackmodel < model.nlpmodel
          Js = sparse(self.m, self.nslack);
          Js(~self.nlp.iFix,:) = -speye(self.nslack);
          J = [Jx Js];
+      end
+      
+      function [Jprod, Jtprod] = gconprod_local(self, xs)
+         % J = self.gcon(x);
+         [Jxprod, Jxtprod] = self.nlp.gconprod(xs(~self.islack,:));
+         Js = sparse(self.m, self.nslack);
+         Js(~self.nlp.iFix,:) = -speye(self.nslack);
+         n = sum(~self.islack);
+         
+         Jprod = @(v) Jxprod(v(1:n)) + Js*v(n+1:end);
+         Jtprod = @(v) [Jxtprod(v); Js'*v];
       end
       
       function HL = hlag_local(self, xs, y)
