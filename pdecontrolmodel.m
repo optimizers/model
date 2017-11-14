@@ -148,9 +148,11 @@ classdef pdecontrolmodel < model.nlpmodel
 
        function P = preconditioner(self, x)
            nn = self.n_cells;
-           A = self.pdecon.evaluateLinearityJacobian(x(1:2*nn));
-           % P = @(v) [v(1:self.n); (A*A')\v(self.n+1:end)];
-           P = @(v) (A*A')\v;
+           A = self.pdecon.Jacobian(x);
+           A = A(1:nn-1,:)';
+           % A = self.pdecon.evaluateLinearityJacobian(x(1:2*nn));
+           G = chol(A*A');
+           P = @(v) (G\(G'\v));
        end
         
    end % methods

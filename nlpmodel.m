@@ -36,6 +36,8 @@ classdef nlpmodel < handle
       ncalls_hvp  = 0 % Hessian Lagrangian vector-product function
       ncalls_hes  = 0 % Hessian Lagrangian function
       ncalls_ghiv = 0 % gHiv products
+      ncalls_jprod = 0 % Products with Jacobian
+      ncalls_jtprod = 0 % Products with Jacobian adjoint
 
       % Time in calls:
       time_fobj = 0 % objective function
@@ -174,10 +176,20 @@ classdef nlpmodel < handle
          self.ncalls_gcon = self.ncalls_gcon + 1;
          t = tic;
          [Jprod_local, Jtprod_local] = self.gconprod_local(self.dc.*x);
-         Jprod = @(v) self.dr.*Jprod_local(self.dc.*v);
-         Jtprod = @(v) self.dc.*Jtprod_local(self.dr.*v);
+         Jprod = @(v) Jprod_inner(self, Jprod_local, v);
+         Jtprod = @(v) Jtprod_inner(self, Jtprod_local, v);
          self.time_gcon = self.time_gcon + toc(t);
-      end    
+         
+         function u = Jprod_inner(self, Jprod_local, v)
+             self.ncalls_jprod = self.ncalls_jprod + 1;
+             u = self.dr.*Jprod_local(self.dc.*v);
+         end
+         
+          function u = Jtprod_inner(self, Jtprod_local, v)
+             self.ncalls_jtprod = self.ncalls_jtprod + 1;
+             u = self.dc.*Jtprod_local(self.dr.*v);           
+          end
+      end
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -1,9 +1,0 @@
-classdef pdecontrolmodel < nlpmodel
-
-   properties
-      n_cells;  % Number of cells
-      alpha;    % Penalty parameter
-   end % properties
-    
-    
-end
