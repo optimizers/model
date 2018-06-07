@@ -155,6 +155,10 @@ classdef pdecontrolmodel < model.nlpmodel
            P = @(v) (G\(G'\v));
        end
         
+       function s = gcon_min_singular_value(~, ~)
+           s = 0;
+       end
+       
    end % methods
     
     

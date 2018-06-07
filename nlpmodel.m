@@ -173,7 +173,6 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function [Jprod, Jtprod] = gconprod(self, x)
-         self.ncalls_gcon = self.ncalls_gcon + 1;
          t = tic;
          [Jprod_local, Jtprod_local] = self.gconprod_local(self.dc.*x);
          Jprod = @(v) Jprod_inner(self, Jprod_local, v);
@@ -441,6 +440,10 @@ classdef nlpmodel < handle
       
       function P = preconditioner(~, ~)
           P = @(x) x;
+      end
+      
+      function s = gcon_min_singular_value(~, ~)
+          s = 0;
       end
       
    end
