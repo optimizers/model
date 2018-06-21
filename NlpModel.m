@@ -141,7 +141,19 @@ classdef NlpModel < handle
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+      
+      function [fObj, grad] = fgobj(self, x)
+            self.ncalls_gobj = self.ncalls_gobj + 1;
+            self.ncalls_fobj = self.ncalls_fobj + 1;
+            t = tic;
+            [fObj, grad] = self.fgobj_local(x);
+            t = toc(t);
+            self.time_gobj = self.time_gobj + t;
+            self.time_fobj = self.time_fobj + t;
+        end
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
       function H = hobj(self, x)
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
@@ -150,6 +162,15 @@ classdef NlpModel < handle
          self.time_hes = self.time_hes + toc(t);
       end
 
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      function w = hobjprod(self, x, y, v)
+            self.ncalls_hvp = self.ncalls_hvp + 1;
+            t = tic;
+            w = self.hobjprod_local(x, y, v) * self.obj_scale;
+            self.time_hvp = self.time_hvp + toc(t);
+        end
+      
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function c = fcon(self, x)
@@ -415,7 +436,7 @@ classdef NlpModel < handle
          s = [s  sprintf('%10s','')];
          s = [s  sprintf('            upper: %5i\n'    ,sum(o.iUpp & ~o.iTwo))];
          s = [s  sprintf('%44slow/upp: %5i','',sum(o.iTwo & ~o.iFix))];
-         s = [s  sprintf('\n')];
+         s = [s  newline];
       end
 
    end % methods
@@ -446,6 +467,26 @@ classdef NlpModel < handle
           s = 0;
       end
       
+      function resetCounters(self)
+            %% ResetCounters
+            % Reset call counters and timers
+            % Number of calls counters
+            self.ncalls_fobj = 0;
+            self.ncalls_gobj = 0;
+            self.ncalls_fcon = 0;
+            self.ncalls_gcon = 0;
+            self.ncalls_hvp  = 0;
+            self.ncalls_hes  = 0;
+            self.ncalls_ghiv = 0;
+            % Time in calls
+            self.time_fobj = 0;
+            self.time_gobj = 0;
+            self.time_fcon = 0;
+            self.time_gcon = 0;
+            self.time_hvp  = 0;
+            self.time_hes  = 0;
+            self.time_ghiv = 0;
+        end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -466,3 +507,5 @@ classdef NlpModel < handle
    end
 
 end % classdef
+
+

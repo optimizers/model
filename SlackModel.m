@@ -79,7 +79,6 @@ classdef SlackModel < model.NlpModel
          
          % Store the original NLP model.
          self.nlp = nlp;
-         
       end
 
       function f = fobj_local(self, xs)
