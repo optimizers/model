@@ -1,4 +1,4 @@
-classdef topologymodel < model.nlpmodel
+classdef TopologyModel < model.NlpModel
 
    properties
       nelx  %
@@ -13,7 +13,7 @@ classdef topologymodel < model.nlpmodel
    end % properties
    
    methods
-       function self = topologymodel(name, x0, nelx, nely, volfrac, penal)
+       function self = TopologyModel(name, x0, nelx, nely, volfrac, penal)
            
           nx = nelx*nely;
           nu = 2*(nelx+1)*(nely+1);
@@ -38,7 +38,7 @@ classdef topologymodel < model.nlpmodel
           bL(nx + fixeddofs) = 0;
           bU(nx + fixeddofs) = 0;
           
-          self = self@model.nlpmodel(name, x0, cL, cU, bL, bU);
+          self = self@model.NlpModel(name, x0, cL, cU, bL, bU);
           
           self.fixeddofs = fixeddofs;
           self.freedofs = freedofs;

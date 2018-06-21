@@ -1,4 +1,4 @@
-classdef nlpmodel < handle
+classdef NlpModel < handle
 
    properties
       n       % number of variables
@@ -64,7 +64,7 @@ classdef nlpmodel < handle
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      function o = nlpmodel(name, x0, cL, cU, bL, bU)
+      function o = NlpModel(name, x0, cL, cU, bL, bU)
 
          % Ensure that the bounds are sensible.
          assert( all(bL <= bU) );

@@ -1,4 +1,4 @@
-classdef pdecontrolmodel < model.nlpmodel
+classdef PdeControlModel < model.NlpModel
 
    properties
       n_cells;      % Number of cells
@@ -11,7 +11,7 @@ classdef pdecontrolmodel < model.nlpmodel
    end % properties
    
    methods
-       function self = pdecontrolmodel(name, n_cells, alpha, pdeobj, pdecon, x0, varargin)
+       function self = PdeControlModel(name, n_cells, alpha, pdeobj, pdecon, x0, varargin)
            
           p = inputParser;
           addParameter(p,'lin_explicit', false);
@@ -38,7 +38,7 @@ classdef pdecontrolmodel < model.nlpmodel
           cL = zeros(m,1);
           cU = zeros(m,1); 
           
-          self = self@model.nlpmodel(name, x0, cL, cU, bL, bU);
+          self = self@model.NlpModel(name, x0, cL, cU, bL, bU);
 
           self.lin_explicit = p.Results.lin_explicit;
           

@@ -1,4 +1,4 @@
-classdef prbarmodel < model.nlpmodel
+classdef PrBarModel < model.NlpModel
    % PRBARMODEL  Convert bound constrained problems to primal barrier.
    %
    % Given the following slack formulation
@@ -19,7 +19,7 @@ classdef prbarmodel < model.nlpmodel
    
    methods
       
-      function self = prbarmodel(nlp, mu)
+      function self = PrBarModel(nlp, mu)
 
          % Upper and lower bounds for the variables and slacks.
          bL = -Inf(nlp.n,1);
@@ -40,7 +40,7 @@ classdef prbarmodel < model.nlpmodel
          x0 = nlp.x0;
 
          % Instantiate from the base class.
-         self = self@model.nlpmodel(nlp.name, x0, cL, cU, bL, bU);
+         self = self@model.NlpModel(nlp.name, x0, cL, cU, bL, bU);
 
          % Identify the linear constraints.
          self.linear = nlp.linear;
