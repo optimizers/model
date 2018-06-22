@@ -1,4 +1,4 @@
-classdef intrelabmodel < model.nlpmodel
+classdef IntreLabModel < model.NlpModel
 
    properties
       pdeobj;       % Objective function struct
@@ -13,7 +13,7 @@ classdef intrelabmodel < model.nlpmodel
    end % properties
    
    methods
-       function self = intrelabmodel(name, pdeobj, pdecon, x0, varargin)
+       function self = IntreLabModel(name, pdeobj, pdecon, x0, varargin)
           
           n = length(x0);
            
@@ -39,7 +39,7 @@ classdef intrelabmodel < model.nlpmodel
           cL = [zeros(m_nln,1); beq];
           cU = [zeros(m_nln,1); beq]; 
           
-          self = self@model.nlpmodel(name, x0, cL, cU, bL, bU);
+          self = self@model.NlpModel(name, x0, cL, cU, bL, bU);
           
           self.pdeobj = pdeobj;
           self.pdecon = pdecon;

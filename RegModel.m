@@ -1,4 +1,4 @@
-classdef regmodel < model.nlpmodel
+classdef RegModel < model.NlpModel
    % REGMODEL  Dual-Regularized nonlinear program
    %
    % Adds dual regularization to problem
@@ -22,7 +22,7 @@ classdef regmodel < model.nlpmodel
    
    methods
       
-      function self = regmodel(nlp, delta)
+      function self = RegModel(nlp, delta)
 
          % Upper and lower bounds for the variables and constraints.
          bL = [nlp.bL; -Inf*ones(nlp.m,1)];
@@ -34,7 +34,7 @@ classdef regmodel < model.nlpmodel
          x0 = [ nlp.x0; zeros(nlp.m,1) ];
 
          % Instantiate from the base class.
-         self = self@model.nlpmodel(nlp.name, x0, cL, cU, bL, bU);
+         self = self@model.NlpModel(nlp.name, x0, cL, cU, bL, bU);
 
          % Identify the linear constraints.
          self.linear = nlp.linear;

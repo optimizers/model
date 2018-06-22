@@ -1,4 +1,4 @@
-classdef cutestmodel < model.nlpmodel
+classdef CutestModel < model.NlpModel
 
    properties
       sparse          % flag indicates is dense of sparse model
@@ -6,7 +6,7 @@ classdef cutestmodel < model.nlpmodel
    
    methods
 
-      function self = cutestmodel(dirname, sparse)
+      function self = CutestModel(dirname, sparse)
          %AMPLMODEL Constructor.
          
          % Construct handle to either sparse or dense interface.
@@ -36,7 +36,7 @@ classdef cutestmodel < model.nlpmodel
          p.cu(p.cu > 1e10) = Inf;
          
          % Instantiate the base class.
-         self = self@model.nlpmodel(p.name, x0, p.cl, p.cu, p.bl, p.bu);
+         self = self@model.NlpModel(p.name, x0, p.cl, p.cu, p.bl, p.bu);
                   
          % Record sparsity flag
          self.sparse = sparse;
