@@ -109,7 +109,7 @@ classdef intrelabmodel < model.nlpmodel
           w = [];
        end
 
-       function P = preconditioner(self, x)
+       function P = gcon_prcnd(self, x)
            nu = self.pdecon.var.nu;
            A = self.pdecon.Jacobian(x(1:self.n_nln));
            A = A(1:self.m_nln,1:nu);
@@ -127,7 +127,7 @@ classdef intrelabmodel < model.nlpmodel
            end
        end
 
-       function s = gcon_min_singular_value(~, ~)
+       function s = gcon_sval(~, ~)
            s = 1;
        end
        

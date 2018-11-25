@@ -82,17 +82,14 @@ classdef amplmodel < model.nlpmodel
       end
 
       function f = fobj_local(self, x)
-         %FOBJ  Objective function.
          f = self.ah.obj(x);
       end
 
       function g = gobj_local(self, x)
-         %GOBJ  Gradient bjective function.
          g = self.ah.grad(x);
       end
       
       function H = hobj_local(self, x)
-         %HOBJ  Hessian of objective function.
          H = self.ah.hessobj(x);
       end
       

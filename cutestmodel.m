@@ -1,5 +1,5 @@
 classdef cutestmodel < model.nlpmodel
-
+%CUTESTMODEL  nlpmodel interface for https://github.com/optimizers/cutest-mirror
    properties
       sparse          % flag indicates is dense of sparse model
    end
@@ -7,7 +7,11 @@ classdef cutestmodel < model.nlpmodel
    methods
 
       function self = cutestmodel(dirname, sparse)
-         %AMPLMODEL Constructor.
+         %CUTESTMODEL  Constructor
+         %
+         %   Inputs:
+         %     dirname  directory of cutest problem
+         %     sparse   use sparse matrices?
          
          % Construct handle to either sparse or dense interface.
          if nargin < 2 || isempty(sparse)
@@ -76,17 +80,14 @@ classdef cutestmodel < model.nlpmodel
       end
       
       function f = fobj_local(~, x)
-         %FOBJ  Objective function.
          f = cutest_obj(x);
       end
 
       function g = gobj_local(~, x)
-         %GOBJ  Gradient bjective function.
          g = cutest_grad(x);
       end
       
       function H = hobj_local(self, x)
-         %HOBJ  Hessian of objective function.
          if self.sparse
             H = cutest_isphess(x, 0);
          else
@@ -95,7 +96,6 @@ classdef cutestmodel < model.nlpmodel
       end
       
       function c = fcon_local(self, x)
-         %FCON  Constraint functions, nonlinear followed by linear.
          if self.m > 0
             c = cutest_cons(x);
          else
@@ -104,7 +104,6 @@ classdef cutestmodel < model.nlpmodel
       end
       
       function J = gcon_local(self, x)
-         %GCON  Constraint functions Jacobian.
          if self.m > 0
              if self.sparse
                 [~,J] = cutest_scons(x);
@@ -151,7 +150,7 @@ classdef cutestmodel < model.nlpmodel
 
       function Hv = hlagprod_local(self, x, y, v)
          if self.m > 0
-            Hv = cutest_hprod(x, y, v);
+            Hv = cutest_hprod(x, -y, v);
          else
             Hv = cutest_hprod(x, v);
          end
@@ -160,9 +159,9 @@ classdef cutestmodel < model.nlpmodel
       function HL = hlag_local(self, x, y)
          if self.m > 0
              if self.sparse
-                HL = cutest_sphess(x, y);
+                HL = cutest_sphess(x, -y);
              else
-                HL = cutest_hess(x, y);  
+                HL = cutest_hess(x, -y);  
              end
          else
              if self.sparse
@@ -174,6 +173,7 @@ classdef cutestmodel < model.nlpmodel
       end
       
       function gHiv = ghivprod_local(self, x, g, v)
+      % Warning: super slow!
          gHiv = zeros(self.m,1);
          for i=1:self.m
             gHiv(i) = g'*(cutest_isphess(x,i)*v);

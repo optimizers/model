@@ -1,17 +1,17 @@
 classdef nlpproblem < model.nlpmodel
    
   properties
-    fobj_loc
-    gobj_loc
-    hobj_loc
-    fcon_loc
-    gcon_loc
-    gconprod_loc
-    hcon_loc
-    hlag_loc
-    hconprod_loc
-    hlagprod_loc
-    ghivprod_loc
+     fobj_loc
+     gobj_loc
+     hobj_loc
+     fcon_loc
+     gcon_loc
+     gconprod_loc
+     hcon_loc
+     hlag_loc
+     hconprod_loc
+     hlagprod_loc
+     ghivprod_loc
    end
 
    methods

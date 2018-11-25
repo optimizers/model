@@ -146,7 +146,7 @@ classdef pdecontrolmodel < model.nlpmodel
           end
        end
 
-       function P = preconditioner(self, x)
+       function P = gcon_prcnd(self, x)
            nn = self.n_cells;
            A = self.pdecon.Jacobian(x);
            A = A(1:nn-1,:)';
@@ -155,8 +155,8 @@ classdef pdecontrolmodel < model.nlpmodel
            P = @(v) (G\(G'\v));
        end
         
-       function s = gcon_min_singular_value(~, ~)
-           s = 0;
+       function s = gcon_sval(~, ~)
+           s = 1;
        end
        
    end % methods

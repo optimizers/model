@@ -25,8 +25,8 @@ classdef nlpmodel < handle
       iTwo    % upper/lower-bounded constraints
       linear  % logical array indicating linear constraints
 
-      Jpattern; % Jacobian sparsity pattern
-      Hpattern; % Hessian sparsity pattern 
+      Jpattern  % Jacobian sparsity pattern
+      Hpattern  % Hessian sparsity pattern 
       
       % Number of calls counter:
       ncalls_fobj = 0 % objective function
@@ -36,7 +36,7 @@ classdef nlpmodel < handle
       ncalls_hvp  = 0 % Hessian Lagrangian vector-product function
       ncalls_hes  = 0 % Hessian Lagrangian function
       ncalls_ghiv = 0 % gHiv products
-      ncalls_jprod = 0 % Products with Jacobian
+      ncalls_jprod = 0  % Products with Jacobian
       ncalls_jtprod = 0 % Products with Jacobian adjoint
 
       % Time in calls:
@@ -112,7 +112,15 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       function set_scaling(self, dc, dr)
-         % Apply new rhs scaling while undoing previous
+         %SET_SCALING  Set variable and constraint scaling
+         %
+         %   Variables:   x -> dc.\x
+         %   Constraints: c -> dr*c
+         %   Jacobian:    J -> dr*J*dc
+         %
+         %   Inputs:
+         %     dc         n-vector
+         %     dr         m-vector
          self.cL = (dr.*self.cL)./self.dr;
          self.cU = (dr.*self.cU)./self.dr;
          self.bL = (self.bL./dc).*self.dc;
@@ -125,6 +133,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function f = fobj(self, x)
+         %FOBJ  Evaluate objective value
          self.ncalls_fobj = self.ncalls_fobj + 1;
          t = tic;
          f = self.fobj_local(self.dc.*x) * self.obj_scale;
@@ -134,6 +143,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function g = gobj(self, x)
+         %GOBJ  Evaluate gradient of objective
          self.ncalls_gobj = self.ncalls_gobj + 1;
          t = tic;
          g = self.dc.*self.gobj_local(self.dc.*x) * self.obj_scale;
@@ -143,6 +153,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function H = hobj(self, x)
+         %HOBJ  Evaluate Hessian of objective
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
          dC = spdiags(self.dc,0,self.n,self.n);
@@ -153,6 +164,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function c = fcon(self, x)
+         %FCON  Evaluate constraints
          self.ncalls_fcon = self.ncalls_fcon + 1;
          t = tic;
          c = self.dr.*self.fcon_local(self.dc.*x);
@@ -162,6 +174,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function J = gcon(self, x)
+         %GCON  Evaluate Jacobian of constraints (m-by-n matrix)
          self.ncalls_gcon = self.ncalls_gcon + 1;
          t = tic;
          dR = spdiags(self.dr,0,self.m,self.m);
@@ -173,6 +186,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function [Jprod, Jtprod] = gconprod(self, x)
+         %GCONPROD  Return function handles to evaluate Jacobian products
          t = tic;
          [Jprod_local, Jtprod_local] = self.gconprod_local(self.dc.*x);
          Jprod = @(v) Jprod_inner(self, Jprod_local, v);
@@ -193,6 +207,10 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function Hc = hcon(self, x, y)
+         %HCON  Evaluate constraint Hessian
+         %
+         %    Hc = sum_{i=1}^m y_i H_i(x)
+         %  where H_i(x) is Hessian of ith constraint function
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
          dC = spdiags(self.dc,0,self.n,self.n);
@@ -203,6 +221,12 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function H = hlag(self, x, y)
+         %HLAG  Evaluate Hessian of the Lagrangian
+         %
+         %  Lagrangian is defined as
+         %    H = Hf - sum_{i=1}^m y_i H_i
+         %  where: Hf  is the Hessian of the objective
+         %         H_i is the Hessian of the ith constraint function
          self.ncalls_hes = self.ncalls_hes + 1;
          t = tic;
          dC = spdiags(self.dc,0,self.n,self.n);
@@ -213,6 +237,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function w = hlagprod(self, x, y, v)
+         %HLAGPROD  Product with Hessian of the Lagrangian
          self.ncalls_hvp = self.ncalls_hvp + 1;
          t = tic;
          dC = spdiags(self.dc,0,self.n,self.n);
@@ -223,6 +248,7 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function w = hconprod(self, x, y, v)
+         %HCONPROD  Product with hessian of constraints
          self.ncalls_hvp = self.ncalls_hvp + 1;
          t = tic;
          dC = spdiags(self.dc,0,self.n,self.n);
@@ -232,10 +258,16 @@ classdef nlpmodel < handle
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      function w = ghivprod(self, x, y, v)
+      function w = ghivprod(self, x, u, v)
+         %GHIVPROD  Product with adjoint constraint Hessian
+         %
+         %   Define S = [u' H_1(x) v]
+         %              [    ...    ]
+         %              [u' H_m(x) v]
+         %   Return w = S*v
          self.ncalls_ghiv = self.ncalls_ghiv + 1;
          t = tic;
-         w = self.dr.*self.ghivprod_local(self.dc.*x, self.dc.*y, self.dc.*v);
+         w = self.dr.*self.ghivprod_local(self.dc.*x, self.dc.*u, self.dc.*v);
          self.time_ghiv = self.time_ghiv + toc(t);
       end
       
@@ -275,27 +307,40 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function scale = scale_obj(self, x)
-        if nargin == 1
-          x = self.x0;
-        end
-        g_max = 1.0e+2;
-        f = self.fobj(x);  % Ensure fobj has been called at the same x
-        g = self.gobj(x);
-        gNorm = norm(g, inf);
-        scale = g_max / max(g_max, gNorm);  % <= 1 always
-        self.obj_scale = scale;
+         %SCALE_OBJ  Scale objective in Lagrangian
+         if nargin == 1
+           x = self.x0;
+         end
+         g_max = 1.0e+2;
+         f = self.fobj(x);  % Ensure fobj has been called at the same x
+         g = self.gobj(x);
+         gNorm = norm(g, inf);
+         scale = g_max / max(g_max, gNorm);  % <= 1 always
+         self.obj_scale = scale;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function [nln_feas, lin_feas, bnd_feas] = prResidual(self, x, c, scaled)
-          
+         %PRRESIDUAL  Compute infinity norm of primal residual
+         %
+         %   Inputs:
+         %     x         primal variable
+         %     c         constraint value
+         %     scaled    return scaled (by dr and dc) primal constraint violation?
+         %
+         %   Output:
+         %     nln_feas  nonlinear constraint violation
+         %     lin_feas  linear constraint violation
+         %     bnd_feas  bound constraint violation
+         %
+         %   If only one output, then return max(nln_feas, lin_feas, bnd_feas)
          bl = self.bL;
          bu = self.bU;
          cl = self.cL;
          cu = self.cU;
          
-         if nargin < 4 || scaled == true
+         if nargin < 4 || scaled
          else
             x = x ./ self.dc;
             c = c ./ self.dr;
@@ -334,6 +379,20 @@ classdef nlpmodel < handle
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       function rNorm = duResidual(self, x, c, g, J, y, zL, zU, scaled)
+         %DURESIDUAL  Compute norm of dual residual
+         %
+         %   Inputs:
+         %     x         primal variable
+         %     c         constraint value
+         %     g         objective vradient
+         %     J         constraint Jacobian
+         %     y         dual variable
+         %     zL,zU     lower/upper bound dual variable
+         %     scaled    return scaled (by dr and dc) dual residual norm?
+         %
+         %   Output:
+         %     rNorm     infinity norm of dual residual
+         %               and complementarity conditions
          if isa(J, 'numeric')
             r = g - J'*y;
          else
@@ -425,6 +484,7 @@ classdef nlpmodel < handle
    methods
 
       function [f, g, H] = obj(self, x)
+         %OBJ  Return objective, gradient and Hessian
          f = self.fobj(x);
          if nargout > 1
           g = self.gobj(x);
@@ -434,18 +494,43 @@ classdef nlpmodel < handle
         end
       end
 
-      function J = gcon_local(self, ~)
-          J = sparse(self.m, self.n);
+      function J = gcon_local(self, x)
+         %GCON_LOCAL  Return empty sparse Jacobian matrix
+         J = sparse(self.m, self.n);
       end
       
-      function P = preconditioner(~, ~)
-          P = @(x) x;
+      function P = gcon_prcnd(self, x)
+         %GCON_PRCND  Function handle for products with Jacobian preconditioner
+         P = @(v) v;
       end
       
-      function s = gcon_min_singular_value(~, ~)
-          s = 0;
+      function s = gcon_sval(self, x)
+         %GCON_SVAL  Underestimate of preconditioned Jacobian
+         s = 0;
       end
       
+      function reset_counters(self)
+         % Number of calls counters
+         ncalls_fobj = 0 % objective function
+         ncalls_gobj = 0 % objective function
+         ncalls_fcon = 0 % constraint function
+         ncalls_gcon = 0 % constraint function
+         ncalls_hvp  = 0 % Hessian Lagrangian vector-product function
+         ncalls_hes  = 0 % Hessian Lagrangian function
+         ncalls_ghiv = 0 % gHiv products
+         ncalls_jprod = 0  % Products with Jacobian
+         ncalls_jtprod = 0 % Products with Jacobian adjoint
+
+         % Time in calls
+         time_fobj = 0 % objective function
+         time_gobj = 0 % objective function
+         time_fcon = 0 % constraint function
+         time_gcon = 0 % constraint function
+         time_hvp  = 0 % Hessian Lagrangian vector-product function
+         time_hes  = 0 % Hessian Lagrangian function
+         time_ghiv = 0 % gHiv products
+      end
+
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
