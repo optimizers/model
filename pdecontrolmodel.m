@@ -154,7 +154,7 @@ classdef pdecontrolmodel < model.nlpmodel
            G = chol(A*A');
            P = @(v) (G\(G'\v));
        end
-        
+
        function s = gcon_sval(~, ~)
            s = 1;
        end
