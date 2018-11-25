@@ -151,7 +151,7 @@ classdef cutestmodel < model.nlpmodel
 
       function Hv = hlagprod_local(self, x, y, v)
          if self.m > 0
-            Hv = cutest_hprod(x, y, v);
+            Hv = cutest_hprod(x, -y, v);
          else
             Hv = cutest_hprod(x, v);
          end
@@ -160,9 +160,9 @@ classdef cutestmodel < model.nlpmodel
       function HL = hlag_local(self, x, y)
          if self.m > 0
              if self.sparse
-                HL = cutest_sphess(x, y);
+                HL = cutest_sphess(x, -y);
              else
-                HL = cutest_hess(x, y);  
+                HL = cutest_hess(x, -y);  
              end
          else
              if self.sparse

@@ -25,8 +25,8 @@ classdef nlpmodel < handle
       iTwo    % upper/lower-bounded constraints
       linear  % logical array indicating linear constraints
 
-      Jpattern; % Jacobian sparsity pattern
-      Hpattern; % Hessian sparsity pattern 
+      Jpattern  % Jacobian sparsity pattern
+      Hpattern  % Hessian sparsity pattern 
       
       % Number of calls counter:
       ncalls_fobj = 0 % objective function
@@ -36,7 +36,7 @@ classdef nlpmodel < handle
       ncalls_hvp  = 0 % Hessian Lagrangian vector-product function
       ncalls_hes  = 0 % Hessian Lagrangian function
       ncalls_ghiv = 0 % gHiv products
-      ncalls_jprod = 0 % Products with Jacobian
+      ncalls_jprod = 0  % Products with Jacobian
       ncalls_jtprod = 0 % Products with Jacobian adjoint
 
       % Time in calls:
