@@ -1,15 +1,26 @@
 function model_classify(dirname, varargin)
-%MODEL_CLASSIFY  List of problems in a directory and their characteristics.
+%MODEL_CLASSIFY  List problems in a directory and their characteristics.
+%
+%   Inputs:
+%     dirname    directory containing problems
+%   
+%   Optional inputs:
+%     criterion  'bnd constrained', 'unconstrained', 'equality'
+%                only print problem if it meets criterion
+%     file       output file (if empty, print to screen)
+%     cutest     are these cutest files or ampl files
 %
 % model_classify('dir name')
 
 p = inputParser;
 p.addParameter('criterion','');
 p.addParameter('file','');
+p.addParameter('cutest', true);
 p.parse(varargin{:});
 
 criterion = p.Results.criterion;
 outFile = p.Results.file;
+cutest = p.Results.cutest;
 
 if ~isempty(outFile)
    fid = fopen(outFile,'w');
@@ -22,19 +33,28 @@ logH = '\n%15s  %6s  %6s  %6s  %6s  %6s  %6s  %6s  %15s\n';
 logB =   '%15s  %6i  %6i  %6i  %6i  %6i  %6i  %6i  %15s\n';
 logT = {'name','n','m','n_bnd','m_bnd','m_fix','m_nln','m_lin','desc'};
 
-d = dir(fullfile(dirname,'*.nl'));
+if cutest
+   d = dir(fullfile(dirname));
+else
+   d = dir(fullfile(dirname,'*.nl'));
+end
 
 fprintf(fid,logH,logT{:});
 fprintf(fid,'%s\n',repmat('-',length(sprintf(logH,logT{:})),1));
 
-for i = 1:length(d)
+if cutest, ix = 3; else ix = 1; end
+for i = ix:length(d)
 
    % Problem and file name.
    pname = d(i).name;
    fname = fullfile(dirname, pname);
 
    % Instantiate problem.
-   p = model.amplmodel(fname,true);
+   if cutest
+      p = model.cutestmodel(fname,true);
+   else
+      p = model.amplmodel(fname,true);
+   end
 
    % Gather stats.
    n = p.n;
@@ -61,12 +81,16 @@ for i = 1:length(d)
    if ~isempty(criterion) && ~strcmp(desc,criterion)
       continue
    end
-   
    if mod(i,20) == 0
       fprintf(fid,logH,logT{:});
       fprintf(fid,'%s\n',repmat('-',length(sprintf(logH,logT{:})),1));
    end
+   
    fprintf(fid,logB, p.name, n, m, n_bnd, m_bnd, m_fix, m_nln, m_lin, desc);
+   if fid ~= 1
+      % display to screen
+      fprintf(logB, strip(pname), n, m, n_bnd, m_bnd, m_fix, m_nln, m_lin, desc);
+   end
 end
 
 end

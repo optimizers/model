@@ -1,24 +1,20 @@
 classdef slackmodel < model.nlpmodel
-   % SLACKMODEL  Equality constraints with bounds.
-   %
-   % Derives the following slack formulation
-   %
-   % minimize  f(x,s)
-   % subj to   ceq(x) = ceq
-   %           c(x) - s = 0
-   %           bL <= x <= bU
-   %           cL <= s <= cU
-   %
-   % from the inequality-based formulation:
-   %
-   % minimize  f(x)
-   % subj to   ceq(x) = ceq
-   %           cL <= c(x) <= cU
-   %           bL <=   x  <= bU
-   %
-   % Thus, the problem appears as such:
-   %
-   % minimize  f(x)  subj to  c(x) = 0, bL <= x <= bU.
+%SLACKMODEL  Equality constraints with bounds.
+%
+% Derives the following slack formulation
+%
+% minimize  f(x,s)
+% subj to   ceq(x) = ceq
+%           c(x) - s = 0
+%           bL <= x <= bU
+%           cL <= s <= cU
+%
+% from the inequality-based formulation:
+%
+% minimize  f(x)
+% subj to   ceq(x) = ceq
+%           cL <= c(x) <= cU
+%           bL <=   x  <= bU
    
    properties
       nlp    % original inequality-based object

@@ -1,5 +1,5 @@
 classdef nlpproblem < model.nlpmodel
-   
+%NLPPROBLEM  Implements nlpmodel with user written functions
   properties
      fobj_loc
      gobj_loc
